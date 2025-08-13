@@ -1,0 +1,112 @@
+
+local MarketplaceService = game:GetService("MarketplaceService")
+
+local playerSpeed_PASS_ID = 1262067667
+local grapple_PASS_ID = 1262173348
+local regenCoil_PASS_ID = 1262428321
+local vip_PASS_ID = 1285405921
+local boombox_PASS_ID = 1306951825
+
+local grappleHook = game.ServerStorage.GrappleHook
+local regenCoil = game.ServerStorage.Regen
+
+local remote             = game.ReplicatedStorage:WaitForChild("doubleSpeed_pass")
+local remote_grapple = game.ReplicatedStorage.grapple_pass
+local remote_coil = game.ReplicatedStorage.regencoil_pass
+
+local gun_ev = game.ReplicatedStorage.FreeGun
+local didPlayerGotGun = false
+
+local freezeRay = game.ReplicatedStorage["Freeze Ray"]
+
+
+local giftModule = require(game.ReplicatedStorage.Gift_module)
+
+------------------------------------------------------------------
+
+local function applySpeed(player)
+	local char = player.Character
+	local hum  = char and char:FindFirstChildOfClass("Humanoid")
+	if hum then
+		hum.WalkSpeed = 32
+	end
+end
+
+------------------------------------------------------------------
+
+remote.OnServerEvent:Connect(function(player)
+	local ok, owns = pcall(function()
+		return MarketplaceService:UserOwnsGamePassAsync(player.UserId, playerSpeed_PASS_ID)
+	end)
+	if ok and owns then
+		
+	end
+end)
+
+--grapple hook
+
+remote.OnServerEvent:Connect(function(player)
+	local ok, owns = pcall(function()
+		return MarketplaceService:UserOwnsGamePassAsync(player.UserId, grapple_PASS_ID)
+	end)
+	if ok and owns then
+		local grapple_clone = grappleHook:Clone()
+		grapple_clone.Parent = player.Backpack
+	end
+end)
+
+--regen coil
+
+remote.OnServerEvent:Connect(function(player)
+	local ok, owns = pcall(function()
+		return MarketplaceService:UserOwnsGamePassAsync(player.UserId, regenCoil_PASS_ID)
+	end)
+	if ok and owns then
+		local regen_clone = regenCoil:Clone()
+		regen_clone.Parent = player.Backpack
+	end
+end)
+
+
+------------------------------------------------------------------
+
+game.Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function()
+		local ok, owns = pcall(function()
+			return MarketplaceService:UserOwnsGamePassAsync(player.UserId, playerSpeed_PASS_ID)
+		end)
+		if ok and owns then
+			-- odrocz o 1 klatke, zeby Humanoid juz istnial
+			task.defer(function() applySpeed(player) end)
+		end
+	end)
+end)
+
+
+
+game.Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function()
+		local ok, owns = pcall(function()
+			return MarketplaceService:UserOwnsGamePassAsync(player.UserId, boombox_PASS_ID)
+		end)
+		if ok and owns then
+
+			task.defer(function() local boomboxClone = game.ReplicatedStorage.ShopItems.BoomBox:Clone()
+				boomboxClone.Parent = player.Backpack	
+			end)
+		end
+	end)
+end)
+
+gun_ev.OnServerEvent:Connect(function(player)
+	giftModule.gotGun = true
+	local clone = freezeRay:Clone()
+	clone.Parent = player.Backpack
+end)
+
+task.spawn(function(player)
+	if giftModule.gotGun == true then
+		local clone = freezeRay:Clone()
+		clone.Parent = freezeRay:Clone()
+	end
+end)
