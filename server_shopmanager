@@ -1,0 +1,80 @@
+local itemBought = game.ReplicatedStorage.ItemBought
+local shopItems = game.ReplicatedStorage.ShopItems
+local ev = game.ReplicatedStorage.thousandCoins_ev
+
+ev.OnServerEvent:Connect(function(player)
+	local coins = player.leaderstats.Coins
+	
+	coins.Value = coins.Value + 1000
+end)
+
+itemBought.OnServerInvoke = function(player, item)
+	
+	local coins = player.leaderstats.Coins
+	
+	if item == "BLOXY_COLA" then
+		
+		print("bloxy cola bought")
+		coins.Value = coins.Value - 25
+		
+		local cola_clone = shopItems:FindFirstChild("Bloxy Cola"):Clone()
+		
+		cola_clone.Parent = player.Backpack
+		
+		
+		
+	elseif item == "BURGER" then
+			
+		print("burger bought")
+		coins.Value = coins.Value - 45
+		
+		local burger_clone = shopItems:FindFirstChild("Cheezburger"):Clone()
+
+		burger_clone.Parent = player.Backpack
+		
+		
+		
+	elseif item == "PIZZA" then
+
+		print("pizza bought")
+		coins.Value = coins.Value - 60
+		
+		local pizza_clone = shopItems:FindFirstChild("Roblox University PIZZA!"):Clone()
+
+		pizza_clone.Parent = player.Backpack
+		
+		
+		
+	elseif item == "BEAR" then
+
+		print("bear bought")
+		coins.Value = coins.Value - 75
+		
+		local bear_clone = shopItems:FindFirstChild("TeddyBloxpin"):Clone()
+
+		bear_clone.Parent = player.Backpack
+		
+		
+		
+	elseif item == "GRAVITY_COIL" then
+
+		print("gravity coil bought")
+		coins.Value = coins.Value - 350
+		
+		local coil_clone = shopItems:FindFirstChild("Gravity Coil"):Clone()
+
+		coil_clone.Parent = player.Backpack
+		
+		
+		
+	elseif item == "BOOMBOX" then
+
+		print("boombox bought")
+		coins.Value = coins.Value - 750
+		
+		local boombox_clone = shopItems:FindFirstChild("BoomBox"):Clone()
+
+		boombox_clone.Parent = player.Backpack
+	end
+		
+end
