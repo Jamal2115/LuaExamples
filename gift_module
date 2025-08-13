@@ -1,0 +1,49 @@
+
+local module = {}
+
+local RS = game:GetService("RunService")
+local giftEv = game.ReplicatedStorage:WaitForChild("Gift_ev")
+
+module.canClick = false
+module.remainingTime = 0
+
+module.gotGun = false
+
+local connectedColorChange = false
+
+module.GiftCountdown = function(player, minutes, seconds, text, stroke)
+	text.Visible = true
+	module.canClick = false
+	module.remainingTime = minutes * 60 + seconds
+
+	if stroke and not connectedColorChange then
+		connectedColorChange = true
+		RS.Stepped:Connect(function()
+			if stroke then
+				stroke.Color = Color3.fromHSV(tick() % 20 / 20, 1, 1)
+			end
+		end)
+	end
+
+	task.spawn(function()
+		while module.remainingTime > 0 do
+			task.wait(1)
+			module.remainingTime -= 1
+
+			local mins = math.floor(module.remainingTime / 60)
+			local secs = module.remainingTime % 60
+
+			if text then
+				text.Text = string.format("%d:%02d", mins, secs)
+			end
+		end
+
+		if text then
+			text.Visible = false
+		end
+
+		module.canClick = true
+	end)
+end
+
+return module
