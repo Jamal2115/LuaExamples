@@ -1,0 +1,131 @@
+local Debris = game:GetService("Debris")
+local RunService = game:GetService("RunService")
+local CoinsFolder = workspace:WaitForChild("Coins")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MPsrvc = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
+
+local GamepassID = 1262057474
+local respawnTime = 60 -- sekundy
+local originalCoinData = {}
+local activeCoins = {}
+
+
+local soundTemplate = ReplicatedStorage:FindFirstChild("Coin Collect 3 - SFX")
+local globalCoinSound = soundTemplate and soundTemplate:Clone()
+
+if globalCoinSound then
+	globalCoinSound.Parent = workspace
+	globalCoinSound.Name = "CoinCollectSound"
+end
+
+
+for _, coin in pairs(CoinsFolder:GetChildren()) do
+	if coin:IsA("BasePart") then
+		local data = {
+			Name = coin.Name,
+			Position = coin.Position,
+			Orientation = coin.Orientation,
+			Size = coin.Size,
+			Shape = coin.Shape,
+			Material = coin.Material,
+			Color = coin.Color
+		}
+		table.insert(originalCoinData, data)
+
+
+		coin:SetAttribute("OriginalDataIndex", #originalCoinData)
+	end
+end
+
+
+RunService.Stepped:Connect(function(_, dt)
+	for _, coin in ipairs(activeCoins) do
+		if coin and coin.Parent then
+			coin.CFrame *= CFrame.Angles(0, 0.05, 0)
+		end
+	end
+end)
+
+
+local function respawnCoin(dataIndex)
+	local data = originalCoinData[dataIndex]
+	if not data then return end
+
+	local newCoin = Instance.new("Part")
+	newCoin.Name = data.Name
+	newCoin.Anchored = true
+	newCoin.CanCollide = false
+	newCoin.Size = data.Size
+	newCoin.Position = data.Position
+	newCoin.Orientation = data.Orientation
+	newCoin.Shape = data.Shape
+	newCoin.Material = data.Material
+	newCoin.Color = data.Color
+	newCoin.Parent = CoinsFolder
+	newCoin:SetAttribute("OriginalDataIndex", dataIndex)
+
+	setupCoin(newCoin)
+end
+
+
+function setupCoin(coin)
+	table.insert(activeCoins, coin)
+	coin:SetAttribute("Collected", false)
+
+	coin.Touched:Connect(function(hit)
+		if coin:GetAttribute("Collected") then return end
+
+		local character = hit.Parent
+		local player = Players:GetPlayerFromCharacter(character)
+		if not player then return end
+
+		local humanoid = character:FindFirstChild("Humanoid")
+		if humanoid then
+			coin:SetAttribute("Collected", true)
+
+			local value = 1
+			pcall(function()
+				if MPsrvc:UserOwnsGamePassAsync(player.UserId, GamepassID) then
+					value = 2
+				end
+			end)
+
+			local stats = player:FindFirstChild("leaderstats")
+			local coinStat = stats and stats:FindFirstChild("Coins")
+			if coinStat then
+				coinStat.Value += value
+			end
+
+			if globalCoinSound then
+				globalCoinSound:Play()
+			end
+
+			local dataIndex = coin:GetAttribute("OriginalDataIndex")
+
+
+			for i, c in ipairs(activeCoins) do
+				if c == coin then
+					table.remove(activeCoins, i)
+					break
+				end
+			end
+
+			coin:Destroy()
+
+
+			if dataIndex then
+				task.delay(respawnTime, function()
+					respawnCoin(dataIndex)
+				end)
+			end
+		end
+	end)
+end
+
+
+for _, coin in pairs(CoinsFolder:GetChildren()) do
+	if coin:IsA("BasePart") then
+		setupCoin(coin)
+	end
+end
